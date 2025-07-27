@@ -94,25 +94,77 @@ export default function ChatPage() {
         return;
       }
 
-      const data = await response.json();
+      if (!response.body) {
+        throw new Error("The response body is empty.");
+      }
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: data.response,
-        sender: "bot",
-        timestamp: new Date(),
-        citations:
-          data.citations?.map(
-            (c: ApiCitation): Citation => ({
-              id: c.chunk_id,
-              documentName: c.filename,
-              pageNumber: c.page_number,
-              snippet: c.chunk_text,
-              relevanceScore: c.score,
-            })
-          ) || [],
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      const botMessageId = (Date.now() + 1).toString();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: botMessageId,
+          text: "",
+          sender: "bot",
+          timestamp: new Date(),
+          citations: [],
+        },
+      ]);
+
+      let responseText = "";
+      let citations: Citation[] = [];
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.trim() === "") continue;
+          try {
+            const json = JSON.parse(line);
+            if (json.data) {
+              if (typeof json.data === "string") {
+                responseText += json.data;
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessageId
+                      ? { ...msg, text: responseText }
+                      : msg
+                  )
+                );
+              } else if (Array.isArray(json.data)) {
+                citations = json.data.map(
+                  (c: ApiCitation): Citation => ({
+                    id: c.chunk_id,
+                    documentName: c.filename,
+                    pageNumber: c.page_number,
+                    snippet: c.chunk_text,
+                    relevanceScore: c.score,
+                  })
+                );
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessageId
+                      ? { ...msg, citations: citations }
+                      : msg
+                  )
+                );
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing JSON line:", line);
+          }
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch from the API:", error);
       const botMessage: Message = {
