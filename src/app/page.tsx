@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import {
-  FileText,
-  Upload,
-  X,
-  Check,
-  MessageSquare,
-  ArrowRight,
-} from "lucide-react";
+import { Upload, X, Check, MessageSquare, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface UploadedFile {
