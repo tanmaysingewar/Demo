@@ -27,7 +27,7 @@ interface Message {
   id: string;
   text: string;
   sender: "user" | "bot";
-  timestamp: Date;
+  timestamp?: Date;
   citations?: Citation[];
 }
 
@@ -109,7 +109,6 @@ export default function ChatPage() {
           id: botMessageId,
           text: "",
           sender: "bot",
-          timestamp: new Date(),
           citations: [],
         },
       ]);
@@ -120,6 +119,13 @@ export default function ChatPage() {
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMessageId
+                ? { ...msg, timestamp: new Date() }
+                : msg
+            )
+          );
           break;
         }
         buffer += decoder.decode(value, { stream: true });
@@ -368,15 +374,17 @@ export default function ChatPage() {
                         </div>
                       </div>
                     )}
-                  <p
-                    className={`text-xs mt-1 ${
-                      message.sender === "user"
-                        ? "text-blue-100"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {formatTime(message.timestamp)}
-                  </p>
+                  {message.timestamp && (
+                    <p
+                      className={`text-xs mt-1 ${
+                        message.sender === "user"
+                          ? "text-blue-100"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {formatTime(message.timestamp)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
