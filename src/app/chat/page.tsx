@@ -110,7 +110,7 @@ export default function ChatPage() {
 
     try {
       // Single API call with search modes
-      const response = await fetch("http://127.0.0.1:8000/query", {
+      const response = await fetch("https://demoapi.tanmay.work/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -248,7 +248,7 @@ export default function ChatPage() {
       setMediaRecorder(recorder);
       setIsRecording(true);
 
-      const ws = new WebSocket("ws://127.0.0.1:8000/listen");
+      const ws = new WebSocket("wss://demoapi.tanmay.work/listen");
       setWebsocket(ws);
 
       ws.onopen = () => {

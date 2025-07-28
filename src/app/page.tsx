@@ -55,11 +55,14 @@ export default function DocumentUpload() {
         const formData = new FormData();
         formData.append("file", uploadedFile.file);
 
-        const response = await fetch("http://localhost:8000/upload-file", {
-          method: "POST",
-          mode: "cors",
-          body: formData,
-        });
+        const response = await fetch(
+          "https://demoapi.tanmay.work//upload-file",
+          {
+            method: "POST",
+            mode: "cors",
+            body: formData,
+          }
+        );
 
         if (response.ok) {
           const result = await response.json();
